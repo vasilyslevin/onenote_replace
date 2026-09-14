@@ -1,0 +1,20 @@
+# Build output
+dist/
+*.exe
+*.pdb
+
+# Local OneNote data and backups
+Backups/
+*.one
+*.onetoc2
+*.xml
+
+# PowerShell and editor files
+.vscode/
+*.ps1.user
+*.log
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
