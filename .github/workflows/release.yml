@@ -1,0 +1,39 @@
+name: Build and release Windows EXE
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build EXE
+        shell: pwsh
+        run: ./scripts/build.ps1
+
+      - name: Verify EXE
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "dist/OneNoteReplace.exe")) {
+              throw "Build failed: dist/OneNoteReplace.exe was not created."
+          }
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" `
+            "dist/OneNoteReplace.exe" `
+            --title "${{ github.ref_name }}" `
+            --generate-notes `
+            --verify-tag
