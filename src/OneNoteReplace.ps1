@@ -1,10 +1,29 @@
 #requires -version 5.1
+param(
+    [switch]$FunctionsOnly
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $script:stage = 'startup'
 
 if ($env:OS -ne 'Windows_NT') { throw 'This utility requires Windows and desktop OneNote.' }
+
+function Get-AppIcon {
+    Add-Type -AssemblyName System.Drawing
+    $bytes = [Convert]::FromBase64String('AAABAAEAICAAAAEAIAAlAQAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAOxJREFUeNpjYBjpgBFdIEao7T8tLVzyrooRpwNwWS7NrkI1Bzz9eQfFEUwDHQWD0wHmCg4M5goOdHEACymKO56FkmVJhdRq0hxw8sEBukUBC7V8MrwSIT0BC65cgC0t0CIRDs4QwJULRhPhkCwJCUUbTeqCWOF2oh1NlZIQZgmyxTD24reVDB3PQnHqZcKVCyitDxYfeUD9NEAo2NEtXXzkAUT8bSXtHbD4bSVKFCw+8oAh1kYBr+U0zYbEWE61XABLYIvfVsItJcZyqoYAcirHZjmu7EiXZjmy5bHC7fRvlpPcJqSnIwa8azYKADUcYxQbgZRMAAAAAElFTkSuQmCC')
+    $stream = New-Object IO.MemoryStream(,$bytes)
+    $icon = $null
+    try {
+        $icon = New-Object Drawing.Icon($stream)
+        return $icon.Clone()
+    } finally {
+        if ($null -ne $icon) { $icon.Dispose() }
+        $stream.Dispose()
+    }
+}
+
+if ($FunctionsOnly) { return }
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -242,6 +261,8 @@ $form.Text = 'OneNote Replace v3.3'
 $form.StartPosition = 'CenterScreen'
 $form.ClientSize = New-Object Drawing.Size(800, 640)
 $form.MinimumSize = New-Object Drawing.Size(816, 679)
+$icon = Get-AppIcon
+$form.Icon = $icon
 $form.Font = New-Object Drawing.Font('Segoe UI', 9)
 
 $intro = New-Object Windows.Forms.Label
@@ -366,4 +387,4 @@ $applyButton.Add_Click({
 })
 
 $form.Add_Shown({ $findBox.Focus() })
-[void]$form.ShowDialog()
+try { [void]$form.ShowDialog() } finally { $form.Dispose(); $icon.Dispose() }
